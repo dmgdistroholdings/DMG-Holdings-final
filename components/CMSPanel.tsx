@@ -161,28 +161,88 @@ const CMSPanel: React.FC<CMSPanelProps> = ({ data, onUpdate, onExit }) => {
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && activeUploadPath) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        // Handle roster images directly (array indices need special handling)
-        if (activeUploadPath[0] === 'roster' && activeUploadPath.length === 3 && activeUploadPath[2] === 'image') {
-          const rosterIdx = parseInt(activeUploadPath[1]);
-          if (!isNaN(rosterIdx)) {
-            const newR = [...data.roster];
-            newR[rosterIdx] = { ...newR[rosterIdx], image: reader.result as string };
-            onUpdate({ ...data, roster: newR });
-            setActiveUploadPath(null);
-            if (fileInputRef.current) fileInputRef.current.value = "";
-            return;
-          }
-        }
-        // For other paths, use the standard updateNestedValue
-        updateNestedValue(activeUploadPath, reader.result as string);
+    
+    if (!file) {
+      // User cancelled file selection
+      setActiveUploadPath(null);
+      return;
+    }
+    
+    if (!activeUploadPath) {
+      console.error('No upload path set');
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      setActiveUploadPath(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+    
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Image file is too large. Maximum size is 10MB.');
+      setActiveUploadPath(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+    
+    const reader = new FileReader();
+    
+    reader.onerror = () => {
+      console.error('Error reading file');
+      alert('Error reading image file. Please try again.');
+      setActiveUploadPath(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    };
+    
+    reader.onloadend = () => {
+      if (!reader.result) {
+        console.error('No result from file reader');
         setActiveUploadPath(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
-      };
-      reader.readAsDataURL(file);
-    }
+        return;
+      }
+      
+      // Handle roster images directly (array indices need special handling)
+      if (activeUploadPath[0] === 'roster' && activeUploadPath.length === 3 && activeUploadPath[2] === 'image') {
+        const rosterIdx = parseInt(activeUploadPath[1]);
+        if (!isNaN(rosterIdx) && rosterIdx >= 0 && rosterIdx < data.roster.length) {
+          const newR = [...data.roster];
+          newR[rosterIdx] = { ...newR[rosterIdx], image: reader.result as string };
+          onUpdate({ ...data, roster: newR });
+          setActiveUploadPath(null);
+          if (fileInputRef.current) fileInputRef.current.value = "";
+          return;
+        }
+      }
+      
+      // Handle enterprise section items (also arrays)
+      if (activeUploadPath[0] === 'enterpriseSections' && activeUploadPath.length === 4 && activeUploadPath[3] === 'image') {
+        const sectionIdx = parseInt(activeUploadPath[1]);
+        const itemIdx = parseInt(activeUploadPath[2]);
+        if (!isNaN(sectionIdx) && !isNaN(itemIdx) && 
+            sectionIdx >= 0 && sectionIdx < data.enterpriseSections.length &&
+            itemIdx >= 0 && itemIdx < data.enterpriseSections[sectionIdx].items.length) {
+          const newS = JSON.parse(JSON.stringify(data.enterpriseSections));
+          newS[sectionIdx].items[itemIdx].image = reader.result as string;
+          onUpdate({ ...data, enterpriseSections: newS });
+          setActiveUploadPath(null);
+          if (fileInputRef.current) fileInputRef.current.value = "";
+          return;
+        }
+      }
+      
+      // For other paths, use the standard updateNestedValue
+      updateNestedValue(activeUploadPath, reader.result as string);
+      setActiveUploadPath(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    };
+    
+    reader.readAsDataURL(file);
   };
 
   const handleAudioAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -255,7 +315,14 @@ const CMSPanel: React.FC<CMSPanelProps> = ({ data, onUpdate, onExit }) => {
 
   return (
     <div className="fixed top-0 left-0 w-full md:w-[480px] h-screen bg-zinc-950 border-r border-white/10 z-[210] overflow-hidden shadow-2xl flex flex-col">
-      <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*" />
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handleFileUpload} 
+        className="hidden" 
+        accept="image/*" 
+        key={activeUploadPath ? activeUploadPath.join('-') : 'default'}
+      />
       <input type="file" ref={audioAddInputRef} onChange={handleAudioAdd} className="hidden" accept="audio/*" />
       <input type="file" ref={audioReplaceInputRef} onChange={e => {
         const file = e.target.files?.[0];
