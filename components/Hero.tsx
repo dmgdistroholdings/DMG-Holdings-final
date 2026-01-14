@@ -49,26 +49,26 @@ const Hero: React.FC<HeroProps> = ({ data, theme, onOpenInquiry }) => {
           </span>
         </div>
         
-        <h1 className="text-5xl md:text-8xl lg:text-9xl font-black tracking-tighter mb-8 leading-[0.85] uppercase italic drop-shadow-2xl">
+        <h1 className="text-4xl sm:text-5xl md:text-8xl lg:text-9xl font-black tracking-tighter mb-6 md:mb-8 leading-[0.85] uppercase italic drop-shadow-2xl px-2">
           {data.title.split(' ').map((word, i) => (
             <span key={i} className={i % 2 !== 0 ? "text-red-600 not-italic font-light block md:inline" : "text-white block md:inline"}>{word} </span>
           ))}
         </h1>
         
-        <p className="max-w-2xl mx-auto text-lg md:text-2xl text-zinc-300 mb-12 leading-relaxed font-light drop-shadow-md px-4">
+        <p className="max-w-2xl mx-auto text-base sm:text-lg md:text-2xl text-zinc-300 mb-8 md:mb-12 leading-relaxed font-light drop-shadow-md px-4">
           {data.subtitle}
         </p>
         
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-6 px-4">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 md:gap-6 px-4">
           <button 
             onClick={onOpenInquiry}
-            className="w-full sm:w-auto px-12 py-5 bg-red-600 text-white font-black uppercase tracking-widest text-xs rounded-sm hover:bg-white hover:text-black transition-all transform active:scale-95 shadow-[0_0_30px_rgba(220,38,38,0.2)]"
+            className="w-full sm:w-auto px-8 sm:px-12 py-4 sm:py-5 bg-red-600 text-white font-black uppercase tracking-widest text-xs rounded-sm hover:bg-white hover:text-black transition-all transform active:scale-95 shadow-[0_0_30px_rgba(220,38,38,0.2)] touch-manipulation"
           >
             Strategic Inquiry
           </button>
           <button 
             onClick={scrollToRoster}
-            className="w-full sm:w-auto px-12 py-5 bg-transparent border border-zinc-700 text-white font-black uppercase tracking-widest text-xs rounded-sm hover:border-red-600 transition-all backdrop-blur-sm active:scale-95"
+            className="w-full sm:w-auto px-8 sm:px-12 py-4 sm:py-5 bg-transparent border border-zinc-700 text-white font-black uppercase tracking-widest text-xs rounded-sm hover:border-red-600 transition-all backdrop-blur-sm active:scale-95 touch-manipulation"
           >
             Explore Roster
           </button>

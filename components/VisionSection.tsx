@@ -14,13 +14,13 @@ const VisionSection: React.FC<VisionProps> = ({ data, theme }) => {
         <div className="grid md:grid-cols-2 gap-24 items-center">
           <div>
             <h2 className="text-xs uppercase tracking-[0.5em] text-zinc-500 font-bold mb-6">Founding Principles</h2>
-            <h3 className="text-5xl md:text-7xl font-bold tracking-tight mb-10 leading-none">
+            <h3 className="text-3xl sm:text-5xl md:text-7xl font-bold tracking-tight mb-6 md:mb-10 leading-none">
               {data.title.split(' ').map((word, i) => (
                 <span key={i} className={i === data.title.split(' ').length - 1 ? "italic font-display text-zinc-500" : ""}>{word} </span>
               ))}
             </h3>
             
-            <div className="space-y-8 text-zinc-400 text-xl leading-relaxed font-light">
+            <div className="space-y-6 md:space-y-8 text-zinc-400 text-base sm:text-lg md:text-xl leading-relaxed font-light">
               {data.paragraphs.map((p, idx) => (
                 <p key={idx}>{p}</p>
               ))}

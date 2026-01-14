@@ -53,7 +53,7 @@ const Navbar: React.FC<NavbarProps> = ({ scrolled, theme, onOpenInquiry, onLogoC
           visibility: isMobileMenuOpen ? 'hidden' : 'visible'
         }}
       >
-        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex justify-between items-center">
           {/* Logo */}
           <button 
             onClick={handleLogoInternalClick}
@@ -62,7 +62,7 @@ const Navbar: React.FC<NavbarProps> = ({ scrolled, theme, onOpenInquiry, onLogoC
             <div className="w-8 h-8 bg-white flex items-center justify-center rounded-sm">
               <span className="text-black font-black text-xs">DMG</span>
             </div>
-            <span className="font-black tracking-tighter text-xl uppercase">
+            <span className="font-black tracking-tighter text-base sm:text-xl uppercase">
               DMG <span className="text-red-600 font-light">HOLDINGS</span>
             </span>
           </button>

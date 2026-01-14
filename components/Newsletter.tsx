@@ -54,14 +54,14 @@ const Newsletter: React.FC<NewsletterProps> = ({ data, theme }) => {
               </div>
             )}
 
-            <div className="relative z-10 p-12 md:p-24 grid lg:grid-cols-2 gap-16 items-center w-full">
+            <div className="relative z-10 p-6 sm:p-12 md:p-24 grid lg:grid-cols-2 gap-8 md:gap-16 items-center w-full">
               <div className="text-left">
                 <div className="inline-flex items-center gap-2 mb-8 bg-white/5 px-4 py-1.5 rounded-full border border-white/10">
                   <div className="w-1.5 h-1.5 rounded-full bg-zinc-400 animate-pulse"></div>
                   <span className="text-[10px] uppercase tracking-[0.3em] font-black text-zinc-400">Quarterly Briefing</span>
                 </div>
                 
-                <h2 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter mb-8 leading-[0.9]">
+                <h2 className="text-3xl sm:text-5xl md:text-7xl font-black italic uppercase tracking-tighter mb-6 md:mb-8 leading-[0.9]">
                   {title.split(' ').map((word, i) => (
                     <span key={i} className={i % 2 !== 0 ? "text-zinc-500 font-light not-italic" : "text-white"}>{word} </span>
                   ))}

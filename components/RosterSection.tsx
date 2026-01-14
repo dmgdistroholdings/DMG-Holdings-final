@@ -9,7 +9,7 @@ const RosterSection: React.FC<{ data: RosterItem[]; theme: SiteTheme }> = ({ dat
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 md:mb-24 gap-8">
           <div className="max-w-2xl">
             <h2 className="text-xs uppercase tracking-[0.5em] text-zinc-500 font-black mb-4 px-1">Global Network</h2>
-            <h3 className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter uppercase italic leading-[0.8]">
+            <h3 className="text-4xl sm:text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter uppercase italic leading-[0.8]">
               The <span className="text-zinc-600 italic font-light not-italic">Roster</span>
             </h3>
           </div>

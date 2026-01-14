@@ -13,8 +13,8 @@ interface FooterProps {
 const Footer: React.FC<FooterProps> = ({ theme, isAdmin, onOpenAdmin, onExitAdmin, onOpenInquiry }) => {
   return (
     <footer id="contact" className="pt-24 pb-40 md:pb-48 border-t border-white/5" style={{ background: theme.background }}>
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid md:grid-cols-4 gap-12 mb-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="grid md:grid-cols-4 gap-8 md:gap-12 mb-12 md:mb-20">
           <div className="col-span-2">
             <div className="flex items-center gap-2 mb-6">
               <div className="w-8 h-8 bg-white flex items-center justify-center rounded-sm">
