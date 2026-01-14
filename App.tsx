@@ -169,7 +169,15 @@ const App: React.FC = () => {
         <RosterSection data={data.roster} theme={data.theme} />
         <CustomSections sections={data.customSections} theme={data.theme} />
         <AiAssistant />
-        <Newsletter data={data.newsletter} theme={data.theme} />
+        <Newsletter 
+          data={data.newsletter} 
+          theme={data.theme} 
+          onSubscriberAdd={(name, email) => {
+            const subscribers = data.newsletter.subscribers || [];
+            subscribers.push({ name, email, timestamp: Date.now() });
+            setData({ ...data, newsletter: { ...data.newsletter, subscribers } });
+          }}
+        />
       </main>
 
       <Footer theme={data.theme} isAdmin={isAdmin} onOpenAdmin={() => setIsLoginOpen(true)} onExitAdmin={() => setIsAdmin(false)} onOpenInquiry={openInquiry} />

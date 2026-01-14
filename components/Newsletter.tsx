@@ -3,11 +3,13 @@ import React, { useState } from 'react';
 import { SiteTheme } from '../types';
 
 interface NewsletterProps {
-  data: { title?: string; subtitle?: string; buttonText?: string; image?: string };
+  data: { title?: string; subtitle?: string; buttonText?: string; image?: string; subscribers?: Array<{ name: string; email: string; timestamp: number }> };
   theme: SiteTheme;
+  onSubscriberAdd?: (name: string, email: string) => void;
 }
 
-const Newsletter: React.FC<NewsletterProps> = ({ data, theme }) => {
+const Newsletter: React.FC<NewsletterProps> = ({ data, theme, onSubscriberAdd }) => {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
 
@@ -19,8 +21,12 @@ const Newsletter: React.FC<NewsletterProps> = ({ data, theme }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email.trim()) {
+    if (email.trim() && name.trim()) {
+      if (onSubscriberAdd) {
+        onSubscriberAdd(name.trim(), email.trim());
+      }
       setSubscribed(true);
+      setName('');
       setEmail('');
     }
   };
@@ -50,13 +56,13 @@ const Newsletter: React.FC<NewsletterProps> = ({ data, theme }) => {
                   alt="Newsletter Visual" 
                   className="w-full h-full object-cover opacity-30 grayscale contrast-125"
                 />
-                <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-b lg:bg-gradient-to-r from-black via-black/80 to-transparent"></div>
               </div>
             )}
 
             <div className="relative z-10 p-6 sm:p-12 md:p-24 grid lg:grid-cols-2 gap-8 md:gap-16 items-center w-full">
-              <div className="text-left">
-                <div className="inline-flex items-center gap-2 mb-8 bg-white/5 px-4 py-1.5 rounded-full border border-white/10">
+              <div className="text-center lg:text-left">
+                <div className="inline-flex items-center gap-2 mb-8 bg-white/5 px-4 py-1.5 rounded-full border border-white/10 mx-auto lg:mx-0">
                   <div className="w-1.5 h-1.5 rounded-full bg-zinc-400 animate-pulse"></div>
                   <span className="text-[10px] uppercase tracking-[0.3em] font-black text-zinc-400">Quarterly Briefing</span>
                 </div>
@@ -67,7 +73,7 @@ const Newsletter: React.FC<NewsletterProps> = ({ data, theme }) => {
                   ))}
                 </h2>
                 
-                <p className="text-zinc-400 max-w-md text-lg font-light leading-relaxed mb-0">
+                <p className="text-zinc-400 max-w-md mx-auto lg:mx-0 text-lg font-light leading-relaxed mb-0">
                   {subtitle}
                 </p>
               </div>
@@ -75,6 +81,16 @@ const Newsletter: React.FC<NewsletterProps> = ({ data, theme }) => {
               <div className="relative">
                 {!subscribed ? (
                   <form onSubmit={handleSubmit} className="relative z-10 space-y-4">
+                    <div className="relative">
+                      <input 
+                        type="text" 
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                        className="w-full bg-black/40 border border-white/10 rounded-2xl px-8 py-6 text-sm focus:outline-none focus:border-white focus:ring-1 focus:ring-white/20 transition-all text-white placeholder:text-zinc-700 backdrop-blur-md"
+                        placeholder="Full Name"
+                      />
+                    </div>
                     <div className="relative">
                       <input 
                         type="email" 

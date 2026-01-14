@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { SiteData, AudioTrack, PortfolioItem, AssetVaultItem } from '../types';
 import { generateSiteImage, generateEnterpriseItem } from '../services/geminiService';
-import { clearDatabase } from '../services/dbService';
+import { clearDatabase, saveSiteData } from '../services/dbService';
 
 interface ImagePreviewProps {
   url: string;
@@ -123,6 +123,7 @@ const CMSPanel: React.FC<CMSPanelProps> = ({ data, onUpdate, onExit }) => {
   type TabType = 'branding' | 'vision' | 'enterprises' | 'talent' | 'newsletter' | 'media' | 'vault' | 'global';
   const [activeTab, setActiveTab] = useState<TabType>('branding');
   const [loading, setLoading] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioAddInputRef = useRef<HTMLInputElement>(null);
@@ -181,7 +182,19 @@ const CMSPanel: React.FC<CMSPanelProps> = ({ data, onUpdate, onExit }) => {
           id: Date.now().toString(),
           title: file.name.replace(/\.[^/.]+$/, ""),
           artist: "DMG Artist",
-          url: reader.result as string
+          url: reader.result as string,
+          isrc: "",
+          upc: "",
+          label: "",
+          publisher: "",
+          releaseTitle: "",
+          releaseDate: "",
+          catalogNumber: "",
+          genre: "",
+          explicit: false,
+          territories: "",
+          rightsNotes: "",
+          publishingSplits: ""
         };
         onUpdate({ ...data, catalog: [...(data.catalog || []), newTrack] });
         if (audioAddInputRef.current) audioAddInputRef.current.value = "";
@@ -213,6 +226,18 @@ const CMSPanel: React.FC<CMSPanelProps> = ({ data, onUpdate, onExit }) => {
     link.href = url;
     link.download = `site_data.json`;
     link.click();
+  };
+
+  const handleSave = async () => {
+    setSaveStatus('saving');
+    try {
+      await saveSiteData(data);
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    } catch (error) {
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    }
   };
 
   return (
@@ -265,7 +290,7 @@ const CMSPanel: React.FC<CMSPanelProps> = ({ data, onUpdate, onExit }) => {
           <button onClick={onExit} className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-all text-[9px] font-black uppercase tracking-widest border border-white/10">Close</button>
         </div>
 
-        <div className="flex bg-black/40 p-1.5 rounded-2xl border border-white/5 overflow-x-auto no-scrollbar shadow-inner mb-6 gap-1">
+        <div className="flex bg-black/40 p-1.5 rounded-2xl border border-white/5 overflow-x-auto scrollbar-hide shadow-inner mb-6 gap-1">
           {[
             { id: 'branding', label: 'Hero' },
             { id: 'vision', label: 'Vision' },
@@ -386,14 +411,192 @@ const CMSPanel: React.FC<CMSPanelProps> = ({ data, onUpdate, onExit }) => {
                <h3 className="text-xs font-black uppercase tracking-[0.3em] text-zinc-600">Audio System Catalog</h3>
                <button onClick={() => audioAddInputRef.current?.click()} className="px-4 py-2 bg-red-600/10 text-red-600 border border-red-600/20 rounded-xl text-[9px] font-black uppercase tracking-widest">Upload Asset</button>
             </div>
-            {data.catalog.map((track, idx) => (
+            {(data.catalog || []).map((track, idx) => (
               <div key={track.id} className="p-5 bg-black/40 rounded-2xl border border-white/5 space-y-4">
                 <div className="flex justify-between items-center gap-4">
                   <div className="flex-1 space-y-2">
                     <input value={track.title} onChange={e => { const newC = [...data.catalog]; newC[idx].title = e.target.value; onUpdate({ ...data, catalog: newC }); }} className="bg-transparent border-none p-0 text-[11px] font-black uppercase text-white w-full" placeholder="Track Title" />
                     <input value={track.artist} onChange={e => { const newC = [...data.catalog]; newC[idx].artist = e.target.value; onUpdate({ ...data, catalog: newC }); }} className="bg-transparent border-none p-0 text-[9px] font-bold uppercase text-zinc-600 w-full" placeholder="Artist Name" />
                   </div>
-                  <button onClick={() => onUpdate({ ...data, catalog: data.catalog.filter(t => t.id !== track.id) })} className="text-red-600 text-lg hover:scale-110 transition-transform">×</button>
+                  <button onClick={() => onUpdate({ ...data, catalog: (data.catalog || []).filter(t => t.id !== track.id) })} className="text-red-600 text-lg hover:scale-110 transition-transform" aria-label="Delete Track">×</button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[9px] uppercase font-bold text-zinc-600 tracking-widest">ISRC</label>
+                    <input
+                      value={track.isrc || ''}
+                      onChange={e => {
+                        const newC = JSON.parse(JSON.stringify(data.catalog || []));
+                        newC[idx].isrc = e.target.value;
+                        onUpdate({ ...data, catalog: newC });
+                      }}
+                      className="w-full bg-black/20 border border-white/10 px-3 py-2 text-[10px] rounded-xl text-white font-mono placeholder:text-zinc-700"
+                      placeholder="US-S1Z-99-00001"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[9px] uppercase font-bold text-zinc-600 tracking-widest">UPC</label>
+                    <input
+                      value={track.upc || ''}
+                      onChange={e => {
+                        const newC = JSON.parse(JSON.stringify(data.catalog || []));
+                        newC[idx].upc = e.target.value;
+                        onUpdate({ ...data, catalog: newC });
+                      }}
+                      className="w-full bg-black/20 border border-white/10 px-3 py-2 text-[10px] rounded-xl text-white font-mono placeholder:text-zinc-700"
+                      placeholder="012345678905"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[9px] uppercase font-bold text-zinc-600 tracking-widest">Label</label>
+                    <input
+                      value={track.label || ''}
+                      onChange={e => {
+                        const newC = JSON.parse(JSON.stringify(data.catalog || []));
+                        newC[idx].label = e.target.value;
+                        onUpdate({ ...data, catalog: newC });
+                      }}
+                      className="w-full bg-black/20 border border-white/10 px-3 py-2 text-[10px] rounded-xl text-white placeholder:text-zinc-700"
+                      placeholder="DMG Records"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[9px] uppercase font-bold text-zinc-600 tracking-widest">Publisher</label>
+                    <input
+                      value={track.publisher || ''}
+                      onChange={e => {
+                        const newC = JSON.parse(JSON.stringify(data.catalog || []));
+                        newC[idx].publisher = e.target.value;
+                        onUpdate({ ...data, catalog: newC });
+                      }}
+                      className="w-full bg-black/20 border border-white/10 px-3 py-2 text-[10px] rounded-xl text-white placeholder:text-zinc-700"
+                      placeholder="DMG Publishing"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[9px] uppercase font-bold text-zinc-600 tracking-widest">Release Title</label>
+                    <input
+                      value={track.releaseTitle || ''}
+                      onChange={e => {
+                        const newC = JSON.parse(JSON.stringify(data.catalog || []));
+                        newC[idx].releaseTitle = e.target.value;
+                        onUpdate({ ...data, catalog: newC });
+                      }}
+                      className="w-full bg-black/20 border border-white/10 px-3 py-2 text-[10px] rounded-xl text-white placeholder:text-zinc-700"
+                      placeholder="Album/EP Name"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[9px] uppercase font-bold text-zinc-600 tracking-widest">Release Date</label>
+                    <input
+                      type="date"
+                      value={track.releaseDate || ''}
+                      onChange={e => {
+                        const newC = JSON.parse(JSON.stringify(data.catalog || []));
+                        newC[idx].releaseDate = e.target.value;
+                        onUpdate({ ...data, catalog: newC });
+                      }}
+                      className="w-full bg-black/20 border border-white/10 px-3 py-2 text-[10px] rounded-xl text-white placeholder:text-zinc-700"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[9px] uppercase font-bold text-zinc-600 tracking-widest">Catalog #</label>
+                    <input
+                      value={track.catalogNumber || ''}
+                      onChange={e => {
+                        const newC = JSON.parse(JSON.stringify(data.catalog || []));
+                        newC[idx].catalogNumber = e.target.value;
+                        onUpdate({ ...data, catalog: newC });
+                      }}
+                      className="w-full bg-black/20 border border-white/10 px-3 py-2 text-[10px] rounded-xl text-white font-mono placeholder:text-zinc-700"
+                      placeholder="DMG-001"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[9px] uppercase font-bold text-zinc-600 tracking-widest">Genre</label>
+                    <input
+                      value={track.genre || ''}
+                      onChange={e => {
+                        const newC = JSON.parse(JSON.stringify(data.catalog || []));
+                        newC[idx].genre = e.target.value;
+                        onUpdate({ ...data, catalog: newC });
+                      }}
+                      className="w-full bg-black/20 border border-white/10 px-3 py-2 text-[10px] rounded-xl text-white placeholder:text-zinc-700"
+                      placeholder="Hip-Hop, Electronic, etc."
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={track.explicit || false}
+                      onChange={e => {
+                        const newC = JSON.parse(JSON.stringify(data.catalog || []));
+                        newC[idx].explicit = e.target.checked;
+                        onUpdate({ ...data, catalog: newC });
+                      }}
+                      className="w-4 h-4 rounded border-white/10 bg-black/20 text-red-600 focus:ring-red-600"
+                    />
+                    <span className="text-[9px] uppercase font-bold text-zinc-600 tracking-widest">Explicit</span>
+                  </label>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[9px] uppercase font-bold text-zinc-600 tracking-widest">Territories / Rights Notes</label>
+                  <textarea
+                    value={track.territories || ''}
+                    onChange={e => {
+                      const newC = JSON.parse(JSON.stringify(data.catalog || []));
+                      newC[idx].territories = e.target.value;
+                      onUpdate({ ...data, catalog: newC });
+                    }}
+                    className="w-full bg-black/20 border border-white/10 px-3 py-2 text-[10px] rounded-xl text-white placeholder:text-zinc-700 min-h-[60px]"
+                    placeholder="Worldwide, US only, etc."
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[9px] uppercase font-bold text-zinc-600 tracking-widest">Publishing Splits</label>
+                  <textarea
+                    value={track.publishingSplits || ''}
+                    onChange={e => {
+                      const newC = JSON.parse(JSON.stringify(data.catalog || []));
+                      newC[idx].publishingSplits = e.target.value;
+                      onUpdate({ ...data, catalog: newC });
+                    }}
+                    className="w-full bg-black/20 border border-white/10 px-3 py-2 text-[10px] rounded-xl text-white placeholder:text-zinc-700 min-h-[60px]"
+                    placeholder="Artist: 50%, Publisher: 50%, etc."
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => {
+                      setActiveAudioReplaceId(track.id);
+                      audioReplaceInputRef.current?.click();
+                    }}
+                    className="py-3 bg-white/5 text-[9px] font-black uppercase tracking-widest text-zinc-400 rounded-xl border border-white/10 hover:bg-white/10 hover:text-white transition-all"
+                  >
+                    Replace Audio
+                  </button>
+                  <button
+                    onClick={() => onUpdate({ ...data, catalog: (data.catalog || []).filter(t => t.id !== track.id) })}
+                    className="py-3 bg-red-600/10 text-[9px] font-black uppercase tracking-widest text-red-400 rounded-xl border border-red-600/20 hover:bg-red-600 hover:text-white transition-all"
+                  >
+                    Delete Track
+                  </button>
                 </div>
               </div>
             ))}
@@ -450,6 +653,19 @@ const CMSPanel: React.FC<CMSPanelProps> = ({ data, onUpdate, onExit }) => {
                   </div>
                 ))}
              </div>
+             <div className="pt-10 border-t border-white/5 space-y-3">
+               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600">Admin Password</h4>
+               <input
+                 type="password"
+                 value={data.adminPassword || ''}
+                 onChange={(e) => updateNestedValue(['adminPassword'], e.target.value)}
+                 className="w-full bg-black/40 border border-white/10 p-4 text-xs rounded-2xl text-white font-bold"
+                 placeholder="Set admin password (default: admin)"
+               />
+               <p className="text-[10px] text-zinc-600 leading-relaxed">
+                 This updates your local config. To make it global for all devices, click <b>Download Publish File</b> and publish it as <code>/site_data.json</code>.
+               </p>
+             </div>
              <div className="pt-12 border-t border-white/5">
                 <button onClick={async () => { if (confirm("DANGER: Wipes browser cache. Continue?")) { await clearDatabase(); window.location.reload(); } }} className="w-full py-4 bg-red-600/10 text-red-500 text-[10px] font-black uppercase tracking-widest rounded-2xl border border-red-600/20 hover:bg-red-600 hover:text-white transition-all">Emergency Local Reset</button>
              </div>
@@ -458,9 +674,26 @@ const CMSPanel: React.FC<CMSPanelProps> = ({ data, onUpdate, onExit }) => {
       </div>
 
       <div className="mt-auto p-8 border-t border-white/5 bg-zinc-950/80 backdrop-blur-xl">
-        <div className="grid grid-cols-2 gap-3">
-           <button onClick={downloadJson} className="py-3 bg-white text-black text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-red-600 hover:text-white transition-all">Download Publish File</button>
-           <button onClick={() => importInputRef.current?.click()} className="py-3 bg-white/5 text-[9px] font-black uppercase tracking-widest text-zinc-500 rounded-xl border border-white/5">Import State</button>
+        <div className="space-y-3">
+          <button 
+            onClick={handleSave} 
+            disabled={saveStatus === 'saving'}
+            className={`w-full py-3 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all ${
+              saveStatus === 'saved' 
+                ? 'bg-green-600 text-white' 
+                : saveStatus === 'error'
+                ? 'bg-red-600 text-white'
+                : saveStatus === 'saving'
+                ? 'bg-zinc-600 text-zinc-400 cursor-not-allowed'
+                : 'bg-white text-black hover:bg-red-600 hover:text-white'
+            }`}
+          >
+            {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? '✓ Saved' : saveStatus === 'error' ? '✗ Error' : 'Save Changes'}
+          </button>
+          <div className="grid grid-cols-2 gap-3">
+             <button onClick={downloadJson} className="py-3 bg-white/5 text-[9px] font-black uppercase tracking-widest text-zinc-400 rounded-xl border border-white/5 hover:bg-white/10 hover:text-white transition-all">Download Publish File</button>
+             <button onClick={() => importInputRef.current?.click()} className="py-3 bg-white/5 text-[9px] font-black uppercase tracking-widest text-zinc-500 rounded-xl border border-white/5 hover:bg-white/10 hover:text-white transition-all">Import State</button>
+          </div>
         </div>
       </div>
     </div>

@@ -68,18 +68,40 @@ export const generateEnterpriseItem = async (growthPrompt: string) => {
 
 export const generateSiteImage = async (baseContext: string, customDirective: string): Promise<string | null> => {
   try {
+    // Enhanced prompt with more image type variety
+    const imageTypeHints = customDirective.toLowerCase();
+    let styleModifier = '';
+    
+    if (imageTypeHints.includes('portrait') || imageTypeHints.includes('artist') || imageTypeHints.includes('person')) {
+      styleModifier = 'PORTRAIT MODE: Close-up or medium shot of subject. Dramatic lighting on face/upper body. Professional headshot or editorial portrait style.';
+    } else if (imageTypeHints.includes('studio') || imageTypeHints.includes('equipment') || imageTypeHints.includes('gear')) {
+      styleModifier = 'STUDIO MODE: Professional recording studio environment. Mixing boards, microphones, instruments, cables. Technical precision with cinematic atmosphere.';
+    } else if (imageTypeHints.includes('concert') || imageTypeHints.includes('stage') || imageTypeHints.includes('performance')) {
+      styleModifier = 'LIVE PERFORMANCE: Stage, crowd, dynamic motion. Concert lighting, energy, movement. Captured in action.';
+    } else if (imageTypeHints.includes('abstract') || imageTypeHints.includes('graphic') || imageTypeHints.includes('pattern')) {
+      styleModifier = 'ABSTRACT/GRAPHIC: Geometric patterns, digital art, visual effects. High contrast, bold shapes, modern design aesthetic.';
+    } else if (imageTypeHints.includes('product') || imageTypeHints.includes('merch') || imageTypeHints.includes('item')) {
+      styleModifier = 'PRODUCT PHOTOGRAPHY: Clean, professional product shots. Minimalist backgrounds, studio lighting, commercial quality.';
+    } else if (imageTypeHints.includes('landscape') || imageTypeHints.includes('city') || imageTypeHints.includes('urban')) {
+      styleModifier = 'URBAN LANDSCAPE: Wide cityscapes, architectural details, street scenes. Cinematic urban environment.';
+    } else {
+      styleModifier = 'GENERAL: Active urban business scenes. Music industry elite in motion. High-end streetwear. Brutalist urban alleys, studio lofts.';
+    }
+
     const combinedPrompt = `
-      High-end cinematic street-style photography for DMG DISTRIBUTION HOLDINGS.
+      High-end cinematic photography for DMG DISTRIBUTION HOLDINGS.
       Context: ${baseContext}
       Specific Directive: ${customDirective}
       
-      Visual Style Protocol:
-      - SUBJECT: Active urban business. Music industry elite in motion. High-end streetwear (Hoodies under luxury coats, high-end sneakers).
-      - ENVIRONMENT: Brutalist urban alleys, studio lofts, textured concrete walls.
-      - AVOID: Generic skyscraper exteriors.
-      - COLOR: Moody greys and blacks with a SHARP RED ACCENT (e.g., a red glowing LED, a red industrial cable, a red highlight on a fashion item).
-      - LIGHTING: Cinematic shadows, sharp focus on subject, industrial grit.
-      - QUALITY: Professional grade, 8k, realistic texture.
+      ${styleModifier}
+      
+      Universal Visual Protocol:
+      - COLOR PALETTE: Moody greys, deep blacks, charcoal tones. MUST include a SHARP RED ACCENT (red LED, red cable, red fashion detail, red light, red text/graphic element).
+      - LIGHTING: Cinematic shadows, dramatic contrast, professional studio or natural urban lighting.
+      - QUALITY: Professional grade, 8k resolution, realistic texture, sharp focus.
+      - AVOID: Generic stock photos, overly bright/cheerful tones, cluttered compositions.
+      - COMPOSITION: Rule of thirds, strong focal point, professional framing.
+      - MOOD: Authoritative, elite, street-corporate aesthetic. High-end but gritty.
     `.trim();
 
     const response = await ai.models.generateContent({

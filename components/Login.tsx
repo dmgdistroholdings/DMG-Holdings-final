@@ -9,6 +9,7 @@ interface LoginProps {
 const Login: React.FC<LoginProps> = ({ onLogin, onClose }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,6 +18,21 @@ const Login: React.FC<LoginProps> = ({ onLogin, onClose }) => {
     } else {
       setError(true);
       setPassword('');
+    }
+  };
+
+  const resetLocalState = async () => {
+    setResetting(true);
+    try {
+      // Clears local admin/site config stored in IndexedDB so you can fall back to published `/site_data.json` or defaults.
+      await new Promise<void>((resolve) => {
+        const req = indexedDB.deleteDatabase("DMG_Ecosystem_DB");
+        req.onsuccess = () => resolve();
+        req.onerror = () => resolve();
+        req.onblocked = () => resolve();
+      });
+    } finally {
+      window.location.reload();
     }
   };
 
@@ -62,9 +78,22 @@ const Login: React.FC<LoginProps> = ({ onLogin, onClose }) => {
           </button>
         </form>
 
-        <p className="text-center mt-8 text-[9px] text-zinc-600 uppercase tracking-widest">
-          Default Password: admin
-        </p>
+        <div className="mt-8 space-y-4">
+          <p className="text-center text-[9px] text-zinc-600 uppercase tracking-widest">
+            Default Password: admin
+          </p>
+          <button
+            type="button"
+            onClick={resetLocalState}
+            disabled={resetting}
+            className="w-full py-3 bg-red-600/10 text-red-400 border border-red-600/20 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all disabled:opacity-50"
+          >
+            {resetting ? "Resetting..." : "Reset Local Admin Data"}
+          </button>
+          <p className="text-center text-[9px] text-zinc-600 leading-relaxed">
+            Use this if your admin password/state changed on one device and you need to recover access.
+          </p>
+        </div>
       </div>
     </div>
   );

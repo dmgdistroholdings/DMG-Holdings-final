@@ -48,6 +48,18 @@ export interface AudioTrack {
   title: string;
   artist: string;
   url: string;
+  isrc?: string;
+  upc?: string;
+  label?: string;
+  publisher?: string;
+  releaseTitle?: string;
+  releaseDate?: string;
+  catalogNumber?: string;
+  genre?: string;
+  explicit?: boolean;
+  territories?: string;
+  rightsNotes?: string;
+  publishingSplits?: string;
 }
 
 export interface SiteData {
@@ -75,6 +87,7 @@ export interface SiteData {
     subtitle: string;
     buttonText: string;
     image: string;
+    subscribers?: Array<{ name: string; email: string; timestamp: number }>;
   };
   customSections: CustomSection[];
   catalog: AudioTrack[];
