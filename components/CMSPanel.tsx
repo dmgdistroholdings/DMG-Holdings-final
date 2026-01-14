@@ -164,6 +164,19 @@ const CMSPanel: React.FC<CMSPanelProps> = ({ data, onUpdate, onExit }) => {
     if (file && activeUploadPath) {
       const reader = new FileReader();
       reader.onloadend = () => {
+        // Handle roster images directly (array indices need special handling)
+        if (activeUploadPath[0] === 'roster' && activeUploadPath.length === 3 && activeUploadPath[2] === 'image') {
+          const rosterIdx = parseInt(activeUploadPath[1]);
+          if (!isNaN(rosterIdx)) {
+            const newR = [...data.roster];
+            newR[rosterIdx] = { ...newR[rosterIdx], image: reader.result as string };
+            onUpdate({ ...data, roster: newR });
+            setActiveUploadPath(null);
+            if (fileInputRef.current) fileInputRef.current.value = "";
+            return;
+          }
+        }
+        // For other paths, use the standard updateNestedValue
         updateNestedValue(activeUploadPath, reader.result as string);
         setActiveUploadPath(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
