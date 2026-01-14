@@ -388,6 +388,16 @@ const CMSPanel: React.FC<CMSPanelProps> = ({ data, onUpdate, onExit }) => {
                   <button onClick={() => updateNestedValue(['roster'], data.roster.filter(r => r.id !== artist.id))} className="text-red-600 font-black">×</button>
                 </div>
                 <input value={artist.role} onChange={e => { const newR = [...data.roster]; newR[idx].role = e.target.value; onUpdate({ ...data, roster: newR }); }} className="w-full bg-black/20 border border-white/10 p-3 text-[10px] rounded-xl text-zinc-500 uppercase font-black tracking-widest" placeholder="Artist Role" />
+                <textarea 
+                  value={artist.description || ''} 
+                  onChange={e => { 
+                    const newR = [...data.roster]; 
+                    newR[idx].description = e.target.value; 
+                    onUpdate({ ...data, roster: newR }); 
+                  }} 
+                  className="w-full bg-black/20 border border-white/10 p-3 text-[10px] rounded-xl text-white placeholder:text-zinc-700 min-h-[80px] resize-y" 
+                  placeholder="Artist description (appears on hover in the roster section)"
+                />
               </div>
             ))}
             <button onClick={() => updateNestedValue(['roster'], [...data.roster, { id: Date.now().toString(), name: "New Talent", role: "Artist", description: "", image: "" }])} className="w-full py-5 bg-white/5 text-[10px] uppercase font-black text-zinc-500 border border-white/5 rounded-2xl hover:bg-white/10 transition-all">+ Add New Artist</button>
