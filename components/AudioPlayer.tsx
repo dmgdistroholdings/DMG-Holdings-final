@@ -14,6 +14,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ catalog, spotifyPlaylistId, a
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLooping, setIsLooping] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [showMetadata, setShowMetadata] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const currentTrack = catalog[currentIndex];
@@ -108,7 +109,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ catalog, spotifyPlaylistId, a
                              <div className={`w-0.5 h-4 md:w-1 md:h-6 bg-white/60 rounded-full mx-0.5 md:mx-1 transition-all duration-300 ${isPlaying ? 'animate-[bounce_0.8s_infinite]' : ''}`}></div>
                              <div className={`w-0.5 h-3 md:w-1 md:h-4 bg-white/40 rounded-full transition-all duration-300 ${isPlaying ? 'animate-[bounce_0.7s_infinite]' : ''}`}></div>
                           </div>
-                          <div className="overflow-hidden">
+                          <div className="overflow-hidden flex-1 min-w-0 cursor-pointer" onClick={() => setShowMetadata(!showMetadata)} title="Click to view metadata">
                             <h4 className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-white truncate">{currentTrack.title}</h4>
                             <p className="text-[8px] md:text-[9px] uppercase tracking-tighter text-zinc-500 font-bold truncate">{currentTrack.artist}</p>
                           </div>
@@ -165,6 +166,92 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ catalog, spotifyPlaylistId, a
                       <div className="text-[10px] uppercase font-black tracking-widest text-zinc-600 px-6">System Archive Restricted</div>
                     )}
                   </div>
+                  
+                  {/* Metadata Panel */}
+                  {showMetadata && currentTrack && (
+                    <div className="border-t border-white/10 bg-black/60 backdrop-blur-xl p-4 md:p-6 space-y-4 animate-in slide-in-from-bottom-2">
+                      <div className="flex justify-between items-center mb-4">
+                        <h5 className="text-[10px] uppercase font-black tracking-widest text-zinc-500">Track Metadata</h5>
+                        <button onClick={() => setShowMetadata(false)} className="text-zinc-600 hover:text-white transition-colors">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+                        {currentTrack.isrc && (
+                          <div>
+                            <label className="text-[8px] uppercase font-bold text-zinc-600 tracking-widest block mb-1">ISRC</label>
+                            <p className="text-[9px] font-mono text-white">{currentTrack.isrc}</p>
+                          </div>
+                        )}
+                        {currentTrack.upc && (
+                          <div>
+                            <label className="text-[8px] uppercase font-bold text-zinc-600 tracking-widest block mb-1">UPC</label>
+                            <p className="text-[9px] font-mono text-white">{currentTrack.upc}</p>
+                          </div>
+                        )}
+                        {currentTrack.label && (
+                          <div>
+                            <label className="text-[8px] uppercase font-bold text-zinc-600 tracking-widest block mb-1">Label</label>
+                            <p className="text-[9px] text-white">{currentTrack.label}</p>
+                          </div>
+                        )}
+                        {currentTrack.publisher && (
+                          <div>
+                            <label className="text-[8px] uppercase font-bold text-zinc-600 tracking-widest block mb-1">Publisher</label>
+                            <p className="text-[9px] text-white">{currentTrack.publisher}</p>
+                          </div>
+                        )}
+                        {currentTrack.releaseTitle && (
+                          <div>
+                            <label className="text-[8px] uppercase font-bold text-zinc-600 tracking-widest block mb-1">Release</label>
+                            <p className="text-[9px] text-white">{currentTrack.releaseTitle}</p>
+                          </div>
+                        )}
+                        {currentTrack.releaseDate && (
+                          <div>
+                            <label className="text-[8px] uppercase font-bold text-zinc-600 tracking-widest block mb-1">Release Date</label>
+                            <p className="text-[9px] text-white">{currentTrack.releaseDate}</p>
+                          </div>
+                        )}
+                        {currentTrack.catalogNumber && (
+                          <div>
+                            <label className="text-[8px] uppercase font-bold text-zinc-600 tracking-widest block mb-1">Catalog #</label>
+                            <p className="text-[9px] font-mono text-white">{currentTrack.catalogNumber}</p>
+                          </div>
+                        )}
+                        {currentTrack.genre && (
+                          <div>
+                            <label className="text-[8px] uppercase font-bold text-zinc-600 tracking-widest block mb-1">Genre</label>
+                            <p className="text-[9px] text-white">{currentTrack.genre}</p>
+                          </div>
+                        )}
+                        {currentTrack.explicit && (
+                          <div>
+                            <label className="text-[8px] uppercase font-bold text-zinc-600 tracking-widest block mb-1">Content</label>
+                            <p className="text-[9px] text-red-500 font-bold">Explicit</p>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {(currentTrack.territories || currentTrack.publishingSplits) && (
+                        <div className="space-y-3 pt-3 border-t border-white/5">
+                          {currentTrack.territories && (
+                            <div>
+                              <label className="text-[8px] uppercase font-bold text-zinc-600 tracking-widest block mb-1">Territories / Rights</label>
+                              <p className="text-[9px] text-zinc-400 leading-relaxed">{currentTrack.territories}</p>
+                            </div>
+                          )}
+                          {currentTrack.publishingSplits && (
+                            <div>
+                              <label className="text-[8px] uppercase font-bold text-zinc-600 tracking-widest block mb-1">Publishing Splits</label>
+                              <p className="text-[9px] text-zinc-400 leading-relaxed">{currentTrack.publishingSplits}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="h-[60px] md:h-[80px] w-full bg-black overflow-hidden relative">
