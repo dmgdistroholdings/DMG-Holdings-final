@@ -341,7 +341,70 @@ const CMSPanel: React.FC<CMSPanelProps> = ({ data, onUpdate, onExit }) => {
         if (file) {
           const reader = new FileReader();
           reader.onload = ev => {
-            try { onUpdate(JSON.parse(ev.target?.result as string)); alert("State Restored."); } catch (e) { alert("Invalid File."); }
+            try {
+              const importedData = JSON.parse(ev.target?.result as string);
+              
+              // Merge roster data - preserve all images and descriptions
+              if (importedData.roster && Array.isArray(importedData.roster)) {
+                const mergedRoster = importedData.roster.map((importedArtist: any) => {
+                  // Find existing artist by ID or name
+                  const existing = data.roster.find((a: any) => a.id === importedArtist.id || a.name === importedArtist.name);
+                  
+                  if (existing) {
+                    // Merge: keep imported image and description if they exist, otherwise keep existing
+                    return {
+                      ...existing,
+                      image: importedArtist.image || existing.image,
+                      description: importedArtist.description || existing.description,
+                      role: importedArtist.role || existing.role,
+                      name: importedArtist.name || existing.name
+                    };
+                  } else {
+                    // New artist - add it
+                    return {
+                      id: importedArtist.id || Date.now().toString(),
+                      name: importedArtist.name || "New Artist",
+                      role: importedArtist.role || "Artist",
+                      description: importedArtist.description || "",
+                      image: importedArtist.image || ""
+                    };
+                  }
+                });
+                
+                // Merge other data while preserving existing
+                const mergedData = {
+                  ...data,
+                  ...importedData,
+                  roster: mergedRoster, // Use merged roster
+                  // Preserve existing images in other sections if imported doesn't have them
+                  hero: {
+                    ...data.hero,
+                    ...importedData.hero,
+                    image: importedData.hero?.image || data.hero?.image
+                  },
+                  vision: {
+                    ...data.vision,
+                    ...importedData.vision,
+                    image: importedData.vision?.image || data.vision?.image
+                  },
+                  newsletter: {
+                    ...data.newsletter,
+                    ...importedData.newsletter,
+                    image: importedData.newsletter?.image || data.newsletter?.image
+                  }
+                };
+                
+                onUpdate(mergedData);
+                alert(`✅ Imported! Merged ${mergedRoster.length} artists with all images and descriptions preserved.`);
+              } else {
+                // Fallback: full replace if no roster in imported data
+                onUpdate(importedData);
+                alert("State Restored.");
+              }
+            } catch (e) {
+              console.error("Import error:", e);
+              alert("Invalid File. " + (e instanceof Error ? e.message : "Please check the file format."));
+            }
           };
           reader.readAsText(file);
         }
