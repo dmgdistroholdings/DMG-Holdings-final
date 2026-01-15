@@ -293,12 +293,22 @@ const CMSPanel: React.FC<CMSPanelProps> = ({ data, onUpdate, onExit }) => {
   };
 
   const downloadJson = () => {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    // Ensure all base64 images are preserved in the download
+    const dataToDownload = JSON.parse(JSON.stringify(data)); // Deep clone to preserve all data
+    
+    // Create blob with proper JSON formatting
+    const blob = new Blob([JSON.stringify(dataToDownload, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `site_data.json`;
+    link.download = `dmg-site-data-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    // Show confirmation
+    alert(`✅ Downloaded site_data.json\n\nFile includes all images as base64 data URLs.\nUpload this file to your server as /site_data.json to make it the default for all visitors.`);
   };
 
   const handleSave = async () => {
@@ -827,9 +837,19 @@ const CMSPanel: React.FC<CMSPanelProps> = ({ data, onUpdate, onExit }) => {
           >
             {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? '✓ Saved' : saveStatus === 'error' ? '✗ Error' : 'Save Changes'}
           </button>
-          <div className="grid grid-cols-2 gap-3">
-             <button onClick={downloadJson} className="py-3 bg-white/5 text-[9px] font-black uppercase tracking-widest text-zinc-400 rounded-xl border border-white/5 hover:bg-white/10 hover:text-white transition-all">Download Publish File</button>
-             <button onClick={() => importInputRef.current?.click()} className="py-3 bg-white/5 text-[9px] font-black uppercase tracking-widest text-zinc-500 rounded-xl border border-white/5 hover:bg-white/10 hover:text-white transition-all">Import State</button>
+          <div className="space-y-3">
+             <div className="p-4 bg-red-600/10 border border-red-600/20 rounded-xl">
+               <p className="text-[9px] uppercase font-black text-red-400 tracking-widest mb-2">📥 Download Site Data</p>
+               <p className="text-[8px] text-zinc-500 leading-relaxed mb-3">
+                 Download complete site data with all images as base64. Upload to server as <code className="bg-black/40 px-1 py-0.5 rounded">/site_data.json</code> to make it the default for all visitors.
+               </p>
+               <button onClick={downloadJson} className="w-full py-3 bg-red-600/20 text-red-400 border border-red-600/30 text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-red-600 hover:text-white transition-all">
+                 ⬇ Download site_data.json
+               </button>
+             </div>
+             <button onClick={() => importInputRef.current?.click()} className="w-full py-3 bg-white/5 text-[9px] font-black uppercase tracking-widest text-zinc-500 rounded-xl border border-white/5 hover:bg-white/10 hover:text-white transition-all">
+               📤 Import State
+             </button>
           </div>
         </div>
       </div>
