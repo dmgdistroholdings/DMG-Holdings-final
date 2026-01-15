@@ -44,14 +44,18 @@ export const loadSiteData = async (initialFallback: SiteData): Promise<SiteData>
   }
 
   // Check for the "Published" file on the Coolify server
-  try {
-    console.log("Attempting to load /site_data.json from server...");
-    const response = await fetch('/site_data.json', {
-      cache: 'no-cache',
-      headers: {
-        'Accept': 'application/json',
-      }
-    });
+  // Try /api/site_data.json first (bypasses Traefik routing), then fallback to /site_data.json
+  const jsonPaths = ['/api/site_data.json', '/site_data.json'];
+  
+  for (const jsonPath of jsonPaths) {
+    try {
+      console.log(`Attempting to load ${jsonPath} from server...`);
+      const response = await fetch(jsonPath, {
+        cache: 'no-cache',
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
     
     if (response.ok) {
       console.log(`✅ site_data.json loaded successfully (${response.headers.get('content-length')} bytes)`);
@@ -66,16 +70,21 @@ export const loadSiteData = async (initialFallback: SiteData): Promise<SiteData>
         console.log(`First image type: ${publishedData.roster?.[0]?.image?.substring(0, 30) || 'none'}`);
         return publishedData;
       } catch (parseError: any) {
-        console.error("❌ JSON parse error:", parseError.message);
+        console.error(`❌ JSON parse error for ${jsonPath}:`, parseError.message);
         console.error("First 500 chars of response:", text.substring(0, 500));
+        continue; // Try next path
       }
     } else {
-      console.warn(`⚠️ site_data.json returned status ${response.status}: ${response.statusText}`);
+      console.warn(`⚠️ ${jsonPath} returned status ${response.status}: ${response.statusText}`);
+      continue; // Try next path
     }
-  } catch (e: any) {
-    console.error("❌ Error fetching site_data.json:", e.message);
-    console.log("Falling back to default template.");
+    } catch (e: any) {
+      console.error(`❌ Error fetching ${jsonPath}:`, e.message);
+      continue; // Try next path
+    }
   }
+  
+  console.log("No published site_data.json found on server. Using default template.");
 
   return initialFallback;
 };
