@@ -90,7 +90,8 @@ const RosterSection: React.FC<{ data: RosterItem[]; theme: SiteTheme }> = ({ dat
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
         
