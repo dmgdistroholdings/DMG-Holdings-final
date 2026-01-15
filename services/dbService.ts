@@ -45,14 +45,36 @@ export const loadSiteData = async (initialFallback: SiteData): Promise<SiteData>
 
   // Check for the "Published" file on the Coolify server
   try {
-    const response = await fetch('/site_data.json');
+    console.log("Attempting to load /site_data.json from server...");
+    const response = await fetch('/site_data.json', {
+      cache: 'no-cache',
+      headers: {
+        'Accept': 'application/json',
+      }
+    });
+    
     if (response.ok) {
-      const publishedData = await response.json();
-      console.log("Global configuration loaded from server.");
-      return publishedData;
+      console.log(`✅ site_data.json loaded successfully (${response.headers.get('content-length')} bytes)`);
+      const text = await response.text();
+      console.log(`JSON text length: ${text.length} characters`);
+      
+      try {
+        const publishedData = JSON.parse(text);
+        console.log("✅ JSON parsed successfully");
+        console.log(`Roster items: ${publishedData.roster?.length || 0}`);
+        console.log(`First artist has image: ${!!publishedData.roster?.[0]?.image}`);
+        console.log(`First image type: ${publishedData.roster?.[0]?.image?.substring(0, 30) || 'none'}`);
+        return publishedData;
+      } catch (parseError: any) {
+        console.error("❌ JSON parse error:", parseError.message);
+        console.error("First 500 chars of response:", text.substring(0, 500));
+      }
+    } else {
+      console.warn(`⚠️ site_data.json returned status ${response.status}: ${response.statusText}`);
     }
-  } catch (e) {
-    console.log("No published site_data.json found on server. Using default template.");
+  } catch (e: any) {
+    console.error("❌ Error fetching site_data.json:", e.message);
+    console.log("Falling back to default template.");
   }
 
   return initialFallback;
