@@ -371,27 +371,11 @@ const CMSPanel: React.FC<CMSPanelProps> = ({ data, onUpdate, onExit }) => {
                   }
                 });
                 
-                // Merge other data while preserving existing
+                // ONLY merge roster - preserve ALL other current data (hero, vision, newsletter, etc.)
                 const mergedData = {
-                  ...data,
-                  ...importedData,
-                  roster: mergedRoster, // Use merged roster
-                  // Preserve existing images in other sections if imported doesn't have them
-                  hero: {
-                    ...data.hero,
-                    ...importedData.hero,
-                    image: importedData.hero?.image || data.hero?.image
-                  },
-                  vision: {
-                    ...data.vision,
-                    ...importedData.vision,
-                    image: importedData.vision?.image || data.vision?.image
-                  },
-                  newsletter: {
-                    ...data.newsletter,
-                    ...importedData.newsletter,
-                    image: importedData.newsletter?.image || data.newsletter?.image
-                  }
+                  ...data, // Keep all current data first
+                  roster: mergedRoster, // Only update roster with merged data
+                  // Keep all other sections exactly as they are - don't overwrite with imported data
                 };
                 
                 onUpdate(mergedData);
