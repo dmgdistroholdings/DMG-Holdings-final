@@ -54,6 +54,7 @@ const Newsletter: React.FC<NewsletterProps> = ({ data, theme, onSubscriberAdd })
                 <img 
                   src={image} 
                   alt="Newsletter Visual" 
+                  loading="lazy"
                   className="w-full h-full object-cover opacity-30 grayscale contrast-125"
                 />
                 <div className="absolute inset-0 bg-gradient-to-b lg:bg-gradient-to-r from-black via-black/80 to-transparent"></div>

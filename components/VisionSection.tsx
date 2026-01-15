@@ -44,6 +44,7 @@ const VisionSection: React.FC<VisionProps> = ({ data, theme }) => {
                 <img 
                   src={data.image} 
                   alt="Vision Visual" 
+                  loading="lazy"
                   className="w-full h-full object-cover rounded-2xl transition-all duration-700 group-hover:scale-105"
                 />
               ) : (

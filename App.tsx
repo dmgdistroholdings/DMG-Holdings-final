@@ -106,13 +106,26 @@ const App: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  // Database Initialization with Global Fallback
+  // Database Initialization with Global Fallback - Load immediately, update in background
   useEffect(() => {
+    // Show site immediately with initial data
+    setData(INITIAL_DATA);
+    
+    // Then load from server in background and update when ready
     const init = async () => {
-      const config = await loadSiteData(INITIAL_DATA);
-      setData(config);
+      try {
+        const config = await loadSiteData(INITIAL_DATA);
+        // Only update if we got data from server (not just fallback)
+        if (config !== INITIAL_DATA) {
+          setData(config);
+        }
+      } catch (e) {
+        // Silently fail - already showing INITIAL_DATA
+      }
     };
-    init();
+    
+    // Load in next tick to not block initial render
+    setTimeout(init, 0);
   }, []);
 
   // Sync local changes (Admin only)

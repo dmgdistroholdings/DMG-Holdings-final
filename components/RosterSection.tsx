@@ -1,10 +1,41 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { RosterItem, SiteTheme } from '../types';
 import ArtistDetailModal from './ArtistDetailModal';
 
 const RosterSection: React.FC<{ data: RosterItem[]; theme: SiteTheme }> = ({ data, theme }) => {
   const [selectedArtist, setSelectedArtist] = useState<RosterItem | null>(null);
+  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
+
+  // Lazy load images when they enter viewport
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const container = entry.target as HTMLElement;
+            const artistId = container.dataset.artistId;
+            if (artistId && !loadedImages.has(artistId)) {
+              setLoadedImages(prev => new Set(prev).add(artistId));
+            }
+          }
+        });
+      },
+      { rootMargin: '100px' }
+    );
+
+    // Observe all artist containers
+    const containers = document.querySelectorAll('[data-artist-id]');
+    containers.forEach((container) => {
+      observer.observe(container);
+    });
+
+    return () => {
+      containers.forEach((container) => {
+        observer.unobserve(container);
+      });
+    };
+  }, [data.length]);
 
   return (
     <>
@@ -23,25 +54,28 @@ const RosterSection: React.FC<{ data: RosterItem[]; theme: SiteTheme }> = ({ dat
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
-            {data.map((artist) => (
-              <div 
-                key={artist.id} 
-                onClick={() => setSelectedArtist(artist)}
-                className="group relative overflow-hidden aspect-[3/4] rounded-[2rem] border border-white/5 bg-zinc-900/40 backdrop-blur-sm shadow-2xl transition-all duration-700 hover:border-white/20 cursor-pointer"
-              >
-                <div className="dmg-img-container h-full">
-                  {artist.image ? (
-                    <img 
-                      src={artist.image} 
-                      alt={artist.name} 
-                      className="transition-transform duration-[2s] group-hover:scale-110 grayscale group-hover:grayscale-0 opacity-60 group-hover:opacity-100"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-zinc-950 flex items-center justify-center italic text-zinc-800 font-black text-8xl select-none">
-                      {artist.name.charAt(0)}
-                    </div>
-                  )}
-                </div>
+            {data.map((artist) => {
+              const shouldLoadImage = loadedImages.has(artist.id);
+              return (
+                <div 
+                  key={artist.id} 
+                  data-artist-id={artist.id}
+                  onClick={() => setSelectedArtist(artist)}
+                  className="group relative overflow-hidden aspect-[3/4] rounded-[2rem] border border-white/5 bg-zinc-900/40 backdrop-blur-sm shadow-2xl transition-all duration-700 hover:border-white/20 cursor-pointer"
+                >
+                  <div className="dmg-img-container h-full">
+                    {artist.image && shouldLoadImage ? (
+                      <img 
+                        src={artist.image} 
+                        alt={artist.name} 
+                        className="transition-transform duration-[2s] group-hover:scale-110 grayscale group-hover:grayscale-0 opacity-60 group-hover:opacity-100"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-zinc-950 flex items-center justify-center italic text-zinc-800 font-black text-8xl select-none">
+                        {artist.name.charAt(0)}
+                      </div>
+                    )}
+                  </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-80 transition-opacity"></div>
                 
                 <div className="absolute bottom-0 left-0 p-8 md:p-12 w-full transform transition-all duration-500">

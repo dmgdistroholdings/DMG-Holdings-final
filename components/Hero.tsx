@@ -30,6 +30,7 @@ const Hero: React.FC<HeroProps> = ({ data, theme, onOpenInquiry }) => {
           <img 
             src={data.image} 
             alt="DMG Visual Identity" 
+            loading="eager"
             className="w-full h-full object-cover object-center opacity-70 transition-opacity duration-1000 grayscale-[0.2] contrast-[1.2]"
           />
         ) : (
