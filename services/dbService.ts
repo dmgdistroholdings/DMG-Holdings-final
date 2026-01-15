@@ -50,37 +50,80 @@ export const loadSiteData = async (initialFallback: SiteData): Promise<SiteData>
   for (const jsonPath of jsonPaths) {
     try {
       console.log(`Attempting to load ${jsonPath} from server...`);
+      const startTime = performance.now();
       const response = await fetch(jsonPath, {
         cache: 'no-cache',
         headers: {
           'Accept': 'application/json',
         }
       });
-    
-    if (response.ok) {
-      console.log(`✅ site_data.json loaded successfully (${response.headers.get('content-length')} bytes)`);
-      const text = await response.text();
-      console.log(`JSON text length: ${text.length} characters`);
       
-      try {
-        const publishedData = JSON.parse(text);
-        console.log("✅ JSON parsed successfully");
-        console.log(`Roster items: ${publishedData.roster?.length || 0}`);
-        console.log(`First artist has image: ${!!publishedData.roster?.[0]?.image}`);
-        console.log(`First image type: ${publishedData.roster?.[0]?.image?.substring(0, 30) || 'none'}`);
-        return publishedData;
-      } catch (parseError: any) {
-        console.error(`❌ JSON parse error for ${jsonPath}:`, parseError.message);
-        console.error("First 500 chars of response:", text.substring(0, 500));
-        continue; // Try next path
+      if (response.ok) {
+        const contentLength = response.headers.get('content-length');
+        const sizeMB = contentLength ? (parseInt(contentLength) / 1024 / 1024).toFixed(2) : 'unknown';
+        console.log(`✅ ${jsonPath} loaded (${sizeMB}MB) - parsing...`);
+        
+        // Use streaming reader for large files to show progress
+        const reader = response.body?.getReader();
+        if (reader) {
+          const chunks: Uint8Array[] = [];
+          let received = 0;
+          const total = contentLength ? parseInt(contentLength) : 0;
+          
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks.push(value);
+            received += value.length;
+            if (total > 0 && received % (1024 * 1024) === 0) {
+              const progress = ((received / total) * 100).toFixed(0);
+              console.log(`Loading: ${progress}% (${(received / 1024 / 1024).toFixed(2)}MB / ${sizeMB}MB)`);
+            }
+          }
+          
+          const text = new TextDecoder().decode(new Uint8Array(chunks.reduce((acc, chunk) => acc + chunk.length, 0)));
+          const allChunks = new Uint8Array(chunks.reduce((acc, chunk) => acc + chunk.length, 0));
+          let offset = 0;
+          for (const chunk of chunks) {
+            allChunks.set(chunk, offset);
+            offset += chunk.length;
+          }
+          const finalText = new TextDecoder().decode(allChunks);
+          
+          console.log(`✅ Downloaded ${(finalText.length / 1024 / 1024).toFixed(2)}MB - parsing JSON...`);
+          const parseStart = performance.now();
+          
+          try {
+            const publishedData = JSON.parse(finalText);
+            const parseTime = ((performance.now() - parseStart) / 1000).toFixed(2);
+            const totalTime = ((performance.now() - startTime) / 1000).toFixed(2);
+            console.log(`✅ JSON parsed in ${parseTime}s (total: ${totalTime}s)`);
+            console.log(`Roster items: ${publishedData.roster?.length || 0}`);
+            return publishedData;
+          } catch (parseError: any) {
+            console.error(`❌ JSON parse error for ${jsonPath}:`, parseError.message);
+            continue;
+          }
+        } else {
+          // Fallback to text() if streaming not available
+          const text = await response.text();
+          console.log(`✅ Downloaded ${(text.length / 1024 / 1024).toFixed(2)}MB - parsing JSON...`);
+          try {
+            const publishedData = JSON.parse(text);
+            console.log("✅ JSON parsed successfully");
+            return publishedData;
+          } catch (parseError: any) {
+            console.error(`❌ JSON parse error for ${jsonPath}:`, parseError.message);
+            continue;
+          }
+        }
+      } else {
+        console.warn(`⚠️ ${jsonPath} returned status ${response.status}: ${response.statusText}`);
+        continue;
       }
-    } else {
-      console.warn(`⚠️ ${jsonPath} returned status ${response.status}: ${response.statusText}`);
-      continue; // Try next path
-    }
     } catch (e: any) {
       console.error(`❌ Error fetching ${jsonPath}:`, e.message);
-      continue; // Try next path
+      continue;
     }
   }
   

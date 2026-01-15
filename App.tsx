@@ -138,6 +138,7 @@ const App: React.FC = () => {
         <div className="text-center">
            <h2 className="text-white text-xl font-black tracking-tighter uppercase italic">DMG <span className="text-red-600">COMMAND</span></h2>
            <p className="text-[10px] text-zinc-600 uppercase tracking-[0.4em] font-bold mt-2">Loading Global Protocol</p>
+           <p className="text-[8px] text-zinc-700 uppercase tracking-widest mt-4">Initializing data infrastructure...</p>
         </div>
       </div>
     );
